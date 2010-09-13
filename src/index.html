@@ -46,7 +46,11 @@
 <table width="930" border ="0" align="center">
 <tr> <td colspan="2"> </td>
 </tr><tr>
-<td class="feed_title" width="300">Enlaces finos:</td>
+<td align="center"><form action='/search' method='get'>
+    Enter a tag to search for: <input type='text' name='q'>
+  <input type='submit' value='Search'>
+</form></td>
+
 </tr>
 
 <tr>
@@ -55,7 +59,13 @@
     <ul>{% for update in updates %}
     {% ifequal forloop.counter 16 %}</ul></td><td width="300" valign="top"><ul>{% endifequal %}
       <li>
-		<a id="images{{ forloop.counter }}" href={{ update.link }} name="{{ update.img }}" description="{{ update.title }}" type="{{ update.music }}" title="{{ update.author }}"> {{ update.title }} </a><br>
+		<a id="images{{ forloop.counter }}"
+		 href={{ update.url }} 
+		 name=/image/{{ update.key }} 
+		 description="{{ update.caption }}" 
+		 type="{{ update.tags }}" 
+		 title="{{ update.title }}">
+		  {{ update.title }} </a><br>
       </li>
       {% if forloop.last %}
       <images_count id="images_count">{{ forloop.counter }}</images_count>

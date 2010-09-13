@@ -7,5 +7,16 @@ handlers:
 - url: /media
   static_dir: media
 
-- url: .*
-  script: main.py
+ 
+- url: /(list|new|upload.*)
+  script: image_sharing.py
+  login: required
+  
+- url: /.*
+  script: image_sharing.py
+
+- url: /stylesheets
+  static_dir: stylesheets
+
+
+  
