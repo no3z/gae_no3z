@@ -33,15 +33,17 @@ __author__ = 'Fred Wulff'
 
 import cgi
 import os
+from main import GenericFeed
 
 from google.appengine.api import images
 from google.appengine.api import users
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
+from google.appengine.api import urlfetch
 
 import wsgiref.handlers
-
+import random
 
 # Makes the tags defined by templatetags/basetags.py usable
 # by templates rendered in this file
@@ -59,7 +61,6 @@ class Album(db.Model):
 
   name = db.StringProperty()
   creator = db.UserProperty()
-  created_date = db.DateTimeProperty(auto_now_add=True)
 
 
 class Picture(db.Model):
@@ -85,8 +86,10 @@ class Picture(db.Model):
   data = db.BlobProperty()
   thumbnail_data = db.BlobProperty()
   url = db.StringProperty()
-  comment = db.StringProperty()
-  
+  comment = db.TextProperty()
+  author = db.StringProperty()
+  rand = db.FloatProperty()
+
 class ImageSharingBaseHandler(webapp.RequestHandler):
   """Base Image Sharing RequestHandlers with some convenience functions."""
 
@@ -107,12 +110,70 @@ class ImageSharingBaseHandler(webapp.RequestHandler):
     )
 
 
+
+class ImportRSSFeed(ImageSharingBaseHandler):
+  def get(self):
+    """Displays the album creation form."""
+    self.render_to_response('rss.html', {})
+
+  def post(self):
+    """Processes an album creation request."""
+    feed_name = cgi.escape(self.request.get('feed_name')) 
+    s1 = Album(name=feed_name,
+          creator=users.get_current_user())
+    s1.put()
+    
+    feed = GenericFeed(feed_name,feed_name)
+    
+    updates = []
+    updates.extend(feed.entries())
+    
+    albumate = s1
+    
+    if albumate is None:
+        self.error(400)
+        self.response.out.write('Couldn\'t find specified album')
+
+    for feed in updates:        
+        # Get the actual data for the picture
+        img_data = db.Blob(urlfetch.Fetch(feed.img).content)
+
+        if img_data == None:
+            continue
+        
+    
+        try:
+            img = images.Image(img_data)
+            img.im_feeling_lucky()
+            png_data = img.execute_transforms(images.PNG)
+            img.resize(120,90)
+            thumbnail_data = img.execute_transforms(images.PNG)
+            Picture(submitter=users.get_current_user(),
+                  title=feed.title,
+                  comment=feed.summary,
+                  album=albumate,
+                  url=feed.link,
+                  data=png_data,
+                  caption=feed.title,
+                  author=feed.author,
+                  rand = random.random(),
+                  thumbnail_data=thumbnail_data).put()
+                  
+        except images.LargeImageError:
+            self.error(400)
+            self.response.out.write(
+                                    'Sorry, the image provided was too large for us to process.')
+          
+    self.redirect('/album/%s' % albumate.key())
+    
+    
+    
 class ImageSharingAlbumIndex(ImageSharingBaseHandler):
   """Handler for listing albums."""
 
   def get(self):
     """Lists all available albums."""
-    albums = Album.all().order('-created_date')
+    albums = Album.all()
     self.render_to_response('list.html', {
         'albums': albums,
       })
@@ -296,12 +357,13 @@ class ImageSharingSearch(ImageSharingBaseHandler):
     """Displays the tag search box and possibly a list of results."""
     query = cgi.escape(self.request.get('q'))
     pics = []
-    pics = Picture.all()
+    pics = Picture.all().filter('rand > ', random.random()).order('rand')
     
     if query:
       # ListProperty magically does want we want: search for the occurrence
       # of the term in any of the tags.
-      pics = Picture.all().filter('tags =', query)
+      pics = Picture.all().filter('rand > ', random.random()).order('rand').get()
+
     else:
       query = ''
       
@@ -309,13 +371,14 @@ class ImageSharingSearch(ImageSharingBaseHandler):
 
       
     self.render_to_response('index.html', {
-        'updates': pics,
+        'updates': pics[:30],
       })
 
 
 def main():
   url_map = [('/list', ImageSharingAlbumIndex),
              ('/new', ImageSharingAlbumCreate),
+             ('/rss', ImportRSSFeed),
              ('/album/([-\w]+)', ImageSharingAlbumView),
              ('/upload/([-\w]+)', ImageSharingUploadImage),
              ('/show_image/([-\w]+)', ImageSharingShowImage),

@@ -34,23 +34,20 @@
 <table width="930" border ="0" align="center">
 <tr> 
 <td colspan="3"></td>
-<td align="center" class="logo"><a href='/'><img src='media/no3z.jpg' description="no3z.com agrega noticias de distintos feeds RSS 2.0 y los presenta finamente." border="0"></a></img></td>
+<td align="center" class="logo"><a href='/'><img src='media/no3z.jpg' description="no3z.com agrega noticias de distintos feeds RSS 2.0 y los presenta finamente." border="0"></a></img>
+
+</td>
 <td></td>
 </tr>
-
-
 
 </table>
 </div>
 
+
+
 <table width="930" border ="0" align="center">
 <tr> <td colspan="2"> </td>
 </tr><tr>
-<td align="center"><form action='/search' method='get'>
-    Enter a tag to search for: <input type='text' name='q'>
-  <input type='submit' value='Search'>
-</form></td>
-
 </tr>
 
 <tr>
@@ -61,8 +58,8 @@
       <li>
 		<a id="images{{ forloop.counter }}"
 		 href={{ update.url }} 
-		 name=/image/{{ update.key }} 
-		 description="{{ update.caption }}" 
+		 name=/thumbnail/{{ update.key }} 
+		 description="{{ update.comment }}" 
 		 type="{{ update.tags }}" 
 		 title="{{ update.title }}">
 		  {{ update.title }} </a><br>

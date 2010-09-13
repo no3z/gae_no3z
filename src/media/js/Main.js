@@ -317,27 +317,27 @@ function mouseDrag()
 	{
 	    	    isMouseDoubleClick = false;
 	    var url = body.GetUserData().doc.href;
-	    var has_music = body.GetUserData().doc.type;
-	    if(has_music != 'None') 
-	    {
-	    	the_audio = document.getElementById('audio_deck');
-	    	if(the_audio) 
-	    		{
-	    			var an = document.getElementById('author_name');
-	    			var text = body.GetUserData().doc.title + " / " + body.GetUserData().doc.text;
-	    			an.innerHTML = text;
-	    			
-	    			the_audio.setAttribute('src', has_music);
-	    			the_audio.play();
-	    			the_audio.addEventListener("load", function() 
-	    			{
- 						$(".duration span").html(the_audio.duration);
-					 	$(".filename span").html(the_audio.src);
-					}, true);
-					the_audio.load()
-	    		}
-	    }
-	    else
+//	    var has_music = body.GetUserData().doc.type;
+//	    if(has_music != 'None') 
+//	    {
+//	    	the_audio = document.getElementById('audio_deck');
+//	    	if(the_audio) 
+//	    		{
+//	    			var an = document.getElementById('author_name');
+//	    			var text = body.GetUserData().doc.title + " / " + body.GetUserData().doc.text;
+//	    			an.innerHTML = text;
+//	    			
+//	    			the_audio.setAttribute('src', has_music);
+//	    			the_audio.play();
+//	    			the_audio.addEventListener("load", function() 
+//	    			{
+// 						$(".duration span").html(the_audio.duration);
+//					 	$(".filename span").html(the_audio.src);
+//					}, true);
+//					the_audio.load()
+//	    		}
+//	    }
+//	    else
 	    	if(url){ window.open(url);}
 	    
 

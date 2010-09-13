@@ -8,7 +8,7 @@ handlers:
   static_dir: media
 
  
-- url: /(list|new|upload.*)
+- url: /(rss|list|new|upload.*)
   script: image_sharing.py
   login: required
   

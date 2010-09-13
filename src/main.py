@@ -21,13 +21,17 @@ class Account(db.Expando):
     user = db.UserProperty()
     
 class Entry:
-    def __init__(self=None, title=None, link=None, timestamp=None, img=None, content=None, service=None):
+    def __init__(self=None, title=None, link=None, timestamp=None, img=None, content=None,
+                 author = None, tags=None, service=None):
         self.title = title
         self.link = link
         self.content = content
         self.service = service
         self.timestamp = timestamp
         self.img = img
+        self.author = author
+        self.tags = tags
+        
     def printTime(self):
         return strftime('%B %d,%Y at %I:%M:%S %p',self.timestamp)            
 
@@ -37,6 +41,10 @@ def images_from_html(html):
     # for img in images_from_html():
     # print img['src']
     return tags
+
+def remove_html_tags(data):
+    p = re.compile(r'<.*?>')
+    return p.sub('', data)
 
 class GenericFeed:
     def __init__(self, url, name):
@@ -52,7 +60,9 @@ class GenericFeed:
                 x.service = self.name
                 x.title = entry['title']
                 x.link = entry['link']
-                
+                x.author = entry['author']
+                x.tags = entry['tags']
+                x.summary = remove_html_tags(entry['summary'])
                 addr = None
                 try:
                     if entry.summary:
@@ -60,19 +70,17 @@ class GenericFeed:
                         try:
                             imgs = images_from_html(x.content)
                             for img in imgs:
-                                addr = img['src']
-                                if addr != None:
+                                x.img = img['src']
+                                if x.img != None:
                                     break
                         except:
                             print 'No image header'
                 except:
                     x.content = entry['title']
                     
-                if addr == None:
+                if x.img == None:
                     continue
                 
-                temp  = images.Image(urlfetch.Fetch(addr).content)
-                x.img = temp
                 x.timestamp = entry.updated_parsed
                 updates.append(x)
         return updates          
