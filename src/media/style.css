@@ -1,5 +1,9 @@
 body {
-
+margin-left: 0px;
+margin-top: 0px;
+margin-right: 0px;
+margin-bottom: 0px;
+overflow: hidden; 
     background-image: url(bg.png);
     background-repeat: repeat-x;
     background-color: #000000;
