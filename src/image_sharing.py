@@ -80,7 +80,7 @@ class Picture(db.Model):
   submitter = db.UserProperty()
   submitted_date = db.DateTimeProperty(auto_now_add=True)
   title = db.StringProperty()
-  caption = db.StringProperty(multiline=True)
+  caption = db.TextProperty()
   album = db.ReferenceProperty(Album, collection_name='pictures')
   tags = db.StringListProperty()
   data = db.BlobProperty()
@@ -89,7 +89,7 @@ class Picture(db.Model):
   comment = db.TextProperty()
   author = db.StringProperty()
   rand = db.FloatProperty()
-
+  osize = db.BooleanProperty()
 class ImageSharingBaseHandler(webapp.RequestHandler):
   """Base Image Sharing RequestHandlers with some convenience functions."""
 
@@ -112,28 +112,33 @@ class ImageSharingBaseHandler(webapp.RequestHandler):
 
 
 class ImportRSSFeed(ImageSharingBaseHandler):
-  def get(self):
-    """Displays the album creation form."""
-    self.render_to_response('rss.html', {})
+  def get(self, album_key):
+    """Display the image upload form.
 
-  def post(self):
+    Args:
+      album_key: datastore key for the album to upload the image to
+    """
+    album = db.get(album_key)
+    self.render_to_response('rss.html', {
+        'album_key': album.key(),
+        'album_name': album.name
+      })
+    
+    
+  def post(self, album_key):
     """Processes an album creation request."""
     feed_name = cgi.escape(self.request.get('feed_name')) 
-    s1 = Album(name=feed_name,
-          creator=users.get_current_user())
-    s1.put()
-    
+
+    album = db.get(album_key)
+    if album is None:
+      self.error(400)
+      self.response.out.write('Couldn\'t find specified album')
+      
     feed = GenericFeed(feed_name,feed_name)
     
     updates = []
     updates.extend(feed.entries())
     
-    albumate = s1
-    
-    if albumate is None:
-        self.error(400)
-        self.response.out.write('Couldn\'t find specified album')
-
     for feed in updates:        
         # Get the actual data for the picture
         img_data = db.Blob(urlfetch.Fetch(feed.img).content)
@@ -151,12 +156,13 @@ class ImportRSSFeed(ImageSharingBaseHandler):
             Picture(submitter=users.get_current_user(),
                   title=feed.title,
                   comment=feed.summary,
-                  album=albumate,
+                  album=album,
                   url=feed.link,
                   data=png_data,
                   caption=feed.title,
                   author=feed.author,
                   rand = random.random(),
+                  osize = False,
                   thumbnail_data=thumbnail_data).put()
                   
         except images.LargeImageError:
@@ -164,7 +170,7 @@ class ImportRSSFeed(ImageSharingBaseHandler):
             self.response.out.write(
                                     'Sorry, the image provided was too large for us to process.')
           
-    self.redirect('/album/%s' % albumate.key())
+    self.redirect('/album/%s' % album.key())
     
     
     
@@ -258,8 +264,8 @@ class ImageSharingUploadImage(ImageSharingBaseHandler):
     title = cgi.escape(self.request.get('title'))
     caption = cgi.escape(self.request.get('caption'))
     url = cgi.escape(self.request.get('url'))
-    comment = cgi.escape(self.request.get('comment'))
-    
+    comment = cgi.escape(self.request.get('caption'))
+    author = cgi.escape(self.request.get('author'))
     tags = cgi.escape(self.request.get('tags')).split(',')
     tags = [tag.strip() for tag in tags]
     # Get the actual data for the picture
@@ -282,9 +288,15 @@ class ImageSharingUploadImage(ImageSharingBaseHandler):
               caption=caption,
               album=album,
               tags=tags,
+              url=url,
+              author=author,
+              rand = random.random(),
               data=png_data,
+              comment=caption,
+              osize=False,
               thumbnail_data=thumbnail_data).put()
-
+                  
+                  
       self.redirect('/album/%s' % album.key())
     except images.BadImageError:
       self.error(400)
@@ -321,6 +333,55 @@ class ImageSharingShowImage(ImageSharingBaseHandler):
     })
 
 
+  def post(self, pic_key):
+    """Process the image upload form.
+
+    We also generate the thumbnail for the picture at this point.
+
+    Args:
+      album_key: datastore key for the album to add the image to
+    """
+
+    pic = db.get(pic_key)
+    
+    if pic is None:
+      self.error(400)
+      self.response.out.write('Couldn\'t find specified pic')
+
+    
+    osize =   cgi.escape(self.request.get('osize'))
+    
+    title = cgi.escape(self.request.get('title'))
+    caption = cgi.escape(self.request.get('caption'))
+    url = cgi.escape(self.request.get('url'))
+    comment = cgi.escape(self.request.get('caption'))
+    author = cgi.escape(self.request.get('author'))
+    osize =   cgi.escape(self.request.get('osize'))    
+    tags = cgi.escape(self.request.get('tags')).split(',')
+    tags = [tag.strip() for tag in tags]
+
+
+    isdelete = cgi.escape(self.request.get('Delete'))
+    if isdelete:
+        pic.delete()
+        delete(pic)
+        self.redirect('/list')
+        return
+    
+    pic.title = title
+    pic.caption = caption
+    pic.comment = caption
+    pic.author = author
+    pic.url = url
+    pic.tags = tags
+    pic.osize = False
+    if osize:
+        pic.osize = True
+        
+    pic.put()
+    
+    self.redirect('/show_image/%s' % pic_key)
+      
 class ImageSharingServeImage(webapp.RequestHandler):
   """Handler for dynamically serving an image from the datastore.
 
@@ -371,17 +432,18 @@ class ImageSharingSearch(ImageSharingBaseHandler):
 
       
     self.render_to_response('index.html', {
-        'updates': pics[:30],
+        'updates': pics[:26],
       })
 
 
 def main():
   url_map = [('/list', ImageSharingAlbumIndex),
              ('/new', ImageSharingAlbumCreate),
-             ('/rss', ImportRSSFeed),
              ('/album/([-\w]+)', ImageSharingAlbumView),
              ('/upload/([-\w]+)', ImageSharingUploadImage),
+              ('/rss/([-\w]+)', ImportRSSFeed),
              ('/show_image/([-\w]+)', ImageSharingShowImage),
+             ('/update/([-\w]+)', ImageSharingShowImage),
              ('/(thumbnail|image)/([-\w]+)', ImageSharingServeImage),
              ('/', ImageSharingSearch)]
   application = webapp.WSGIApplication(url_map,

@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Viewing {{pic.title}}{% endblock %}
 {% block content %}
+<form action='/update/{{pic.key}}' method='post'
+  enctype='multipart/form-data'>
+<a>
 <div class='pictitle'>
   {{pic.title}}
-</div>
+</div><br>
 <div class='picsubmitter'>
   {{pic.submitter}}
 </div>
@@ -11,7 +14,7 @@
   <img src='/image/{{image_key}}'>
 </div>
 <div class='piccaption'>
-  {{pic.caption}}
+  {{pic.author}}
 </div>
 <div class='pictags'>
   Tags:
@@ -19,5 +22,53 @@
   <a href='/search?q={{tag}}'>{{tag}}</a>{% if not forloop.last %},{% endif %}
   {% endfor %}
 </div>
+
+  <div class='formrow'><a>
+ Title:
+    <input type='text' name='title' value={{pic.title}} SIZE=80 MAXLENGHT=155>
+      </div>
+      
+  <div class='formrow'>
+    URL:
+    <input type='text' name='url' value={{pic.url}} SIZE=96 MAXLENGHT=1024>
+  </div>
+  
+    <div class='author'><a>
+ Title:
+    <input type='text' name='author' value={{pic.author}} SIZE=80 MAXLENGHT=155>
+      </div>
+      
+  </div>
+  <div class='formrow'>
+    Caption:
+    <textarea name='caption'  rows='13' cols='60'>{{pic.comment}}</textarea> 
+  </div>
+  <div class='formrow'>
+    Tags (comma separated):
+    <input type='text' value={{pic.tags}} name='tags'> 
+  </div>
+ 
+
+ <div class='formrow'>
+<INPUT TYPE=CHECKBOX name='osize' value={{pic.osize}}>Original_size
+  </div>
+    <div class='formrow'>
+<INPUT TYPE=CHECKBOX name='Delete'>Delete 
+  </div>
+  <br>
+  
+<div class='formrow'>
+  <input type='submit' value='UPDATE'>
+  </div>
+<br>
+<br>
+</form>
+
+<div class='formrow'>
 <a href='/album/{{pic.album.key}}'>Back to album</a>
+  </div>
+
+
+</a>
+
 {% endblock %}
