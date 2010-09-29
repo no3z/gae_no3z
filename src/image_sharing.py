@@ -90,6 +90,8 @@ class Picture(db.Model):
   author = db.StringProperty()
   rand = db.FloatProperty()
   osize = db.BooleanProperty()
+  portfolio = db.StringProperty()
+  
 class ImageSharingBaseHandler(webapp.RequestHandler):
   """Base Image Sharing RequestHandlers with some convenience functions."""
 
@@ -146,30 +148,35 @@ class ImportRSSFeed(ImageSharingBaseHandler):
         if img_data == None:
             continue
         
+        pic = db.Query(Picture)
+        pic = Picture.all().filter('title=', feed.title)
+        num = pic.count()
     
-        try:
-            img = images.Image(img_data)
-            img.im_feeling_lucky()
-            png_data = img.execute_transforms(images.PNG)
-            img.resize(120,90)
-            thumbnail_data = img.execute_transforms(images.PNG)
-            Picture(submitter=users.get_current_user(),
-                  title=feed.title,
-                  comment=feed.summary,
-                  album=album,
-                  url=feed.link,
-                  data=png_data,
-                  caption=feed.title,
-                  author=feed.author,
-                  rand = random.random(),
-                  osize = False,
-                  thumbnail_data=thumbnail_data).put()
-                  
-        except images.LargeImageError:
-            self.error(400)
-            self.response.out.write(
-                                    'Sorry, the image provided was too large for us to process.')
-          
+        if num == 0:
+            try:
+                img = images.Image(img_data)
+                img.im_feeling_lucky()
+                png_data = img.execute_transforms(images.PNG)
+                img.resize(120,90)
+                thumbnail_data = img.execute_transforms(images.PNG)
+                Picture(submitter=users.get_current_user(),
+                      title=feed.title,
+                      comment=feed.summary,
+                      album=album,
+                      url=feed.link,
+                      data=png_data,
+                      caption=feed.summary[0:140],
+                      author=feed.author,
+                      rand = random.random(),
+                      osize = False,
+                      portfolio = album.name,
+                      thumbnail_data=thumbnail_data).put()
+                      
+            except images.LargeImageError:
+                self.error(400)
+                self.response.out.write(
+                                        'Sorry, the image provided was too large for us to process.')
+              
     self.redirect('/album/%s' % album.key())
     
     
@@ -265,11 +272,17 @@ class ImageSharingUploadImage(ImageSharingBaseHandler):
     caption = cgi.escape(self.request.get('caption'))
     url = cgi.escape(self.request.get('url'))
     comment = cgi.escape(self.request.get('caption'))
+    caption = comment[0:144]
     author = cgi.escape(self.request.get('author'))
     tags = cgi.escape(self.request.get('tags')).split(',')
     tags = [tag.strip() for tag in tags]
     # Get the actual data for the picture
     img_data = self.request.POST.get('picfile').file.read()
+    osize = cgi.escape(self.request.get('osize'))
+
+    isosize = False
+    if osize:
+       isosize = True
 
     try:
       img = images.Image(img_data)
@@ -286,14 +299,15 @@ class ImageSharingUploadImage(ImageSharingBaseHandler):
       Picture(submitter=users.get_current_user(),
               title=title,
               caption=caption,
+              comment=comment,
               album=album,
               tags=tags,
               url=url,
               author=author,
               rand = random.random(),
               data=png_data,
-              comment=caption,
-              osize=False,
+              osize=isosize,
+              portfolio=album.name,
               thumbnail_data=thumbnail_data).put()
                   
                   
@@ -349,22 +363,18 @@ class ImageSharingShowImage(ImageSharingBaseHandler):
       self.response.out.write('Couldn\'t find specified pic')
 
     
-    osize =   cgi.escape(self.request.get('osize'))
-    
     title = cgi.escape(self.request.get('title'))
     caption = cgi.escape(self.request.get('caption'))
     url = cgi.escape(self.request.get('url'))
     comment = cgi.escape(self.request.get('caption'))
     author = cgi.escape(self.request.get('author'))
     osize =   cgi.escape(self.request.get('osize'))    
-    tags = cgi.escape(self.request.get('tags')).split(',')
-    tags = [tag.strip() for tag in tags]
-
-
-    isdelete = cgi.escape(self.request.get('Delete'))
+    portfolio =   cgi.escape(self.request.get('portfolio')) 
+    tags = cgi.escape(self.request.get('tags'))
+    isdelete = cgi.escape(self.request.get('delete'))
+    
     if isdelete:
         pic.delete()
-        delete(pic)
         self.redirect('/list')
         return
     
@@ -373,7 +383,7 @@ class ImageSharingShowImage(ImageSharingBaseHandler):
     pic.comment = caption
     pic.author = author
     pic.url = url
-    pic.tags = tags
+    pic.portfolio = portfolio
     pic.osize = False
     if osize:
         pic.osize = True
@@ -410,32 +420,45 @@ class ImageSharingServeImage(webapp.RequestHandler):
           'Couldn\'t determine what type of image to serve.')
 
 class ImageSharingSearch(ImageSharingBaseHandler):
-  """Handler for searching pictures by tag."""
-
-  def get(self):
+  def get(self):   
       
-      
-    """Displays the tag search box and possibly a list of results."""
-    query = cgi.escape(self.request.get('q'))
     pics = []
     pics = Picture.all().filter('rand > ', random.random()).order('rand')
-    
-    if query:
-      # ListProperty magically does want we want: search for the occurrence
-      # of the term in any of the tags.
-      pics = Picture.all().filter('rand > ', random.random()).order('rand').get()
-
-    else:
-      query = ''
-      
-
-
-      
+    pics.order('-portfolio')
     self.render_to_response('index.html', {
         'updates': pics[:26],
       })
 
-
+class ImagevideoSearch(ImageSharingBaseHandler):
+  def get(self):   
+    
+    pics = []
+    pics = Picture.all()
+    pics.filter("portfolio =", "VIDEO")
+    self.render_to_response('index.html', {
+        'updates': pics[:26],
+      })
+    
+class ImagelinksSearch(ImageSharingBaseHandler):
+  def get(self):   
+    pics = []
+    pics = Picture.all()
+    pics.filter("portfolio =", "LINKS")
+    self.render_to_response('index.html', {
+        'updates': pics[:26],
+      })
+    
+    
+class ImageaboutSearch(ImageSharingBaseHandler):
+  def get(self):   
+    pics = []
+    pics = Picture.all()
+    pics.filter("portfolio =", "ABOUT")
+    self.render_to_response('index.html', {
+        'updates': pics[:26],
+      })
+    
+    
 def main():
   url_map = [('/list', ImageSharingAlbumIndex),
              ('/new', ImageSharingAlbumCreate),
@@ -445,6 +468,9 @@ def main():
              ('/show_image/([-\w]+)', ImageSharingShowImage),
              ('/update/([-\w]+)', ImageSharingShowImage),
              ('/(thumbnail|image)/([-\w]+)', ImageSharingServeImage),
+              ('/about', ImageaboutSearch),
+               ('/links', ImagelinksSearch),
+                ('/video', ImagevideoSearch),
              ('/', ImageSharingSearch)]
   application = webapp.WSGIApplication(url_map,
                                        debug=True)

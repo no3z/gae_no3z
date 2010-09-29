@@ -25,35 +25,39 @@
 
   <div class='formrow'><a>
  Title:
-    <input type='text' name='title' value={{pic.title}} SIZE=80 MAXLENGHT=155>
+    <input type='text' name='title' value={{pic.title}} >
       </div>
       
   <div class='formrow'>
     URL:
-    <input type='text' name='url' value={{pic.url}} SIZE=96 MAXLENGHT=1024>
+    <input type='text' name='url' value={{pic.url}} 4>
   </div>
   
     <div class='author'><a>
  Title:
-    <input type='text' name='author' value={{pic.author}} SIZE=80 MAXLENGHT=155>
+    <input type='text' name='author' value={{pic.author}}>
       </div>
       
   </div>
   <div class='formrow'>
     Caption:
-    <textarea name='caption'  rows='13' cols='60'>{{pic.comment}}</textarea> 
+    <textarea name='caption'  rows='13' cols='60'>{{pic.caption}}</textarea> 
   </div>
-  <div class='formrow'>
-    Tags (comma separated):
-    <input type='text' value={{pic.tags}} name='tags'> 
-  </div>
- 
 
- <div class='formrow'>
-<INPUT TYPE=CHECKBOX name='osize' value={{pic.osize}}>Original_size
+ 
+  <div class='formrow'>
+    PORTFOLIO(Album name):
+    <input type='text' value={{pic.portfolio}} name='portfolio'> 
   </div>
+  
+ <div class='formrow'>
+<INPUT TYPE=CHECKBOX name='osize'>Show As Original_size
+  </div>
+  
+  <br>
+  
     <div class='formrow'>
-<INPUT TYPE=CHECKBOX name='Delete'>Delete 
+<INPUT TYPE=CHECKBOX name='delete'>Delete 
   </div>
   <br>
   

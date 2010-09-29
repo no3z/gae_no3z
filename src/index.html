@@ -2,7 +2,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<title>no3z - Agregador muy finolis en spanish</title>
+<title>no3z . co3m</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="rss, feeds, interesting, no3z, html5, canvas, noticias dinamicas, curiosidades">
 <meta name="description" content="Agregador de noticias de distintas fuentes llamado no3z">
@@ -34,7 +34,7 @@
 <table width="930" border ="0" align="center">
 <tr> 
 <td colspan="3"></td>
-<td align="center" class="logo"><a href='/'><img src='media/no3z.jpg' description="no3z.com agrega noticias de distintos feeds RSS 2.0 y los presenta finamente." border="0"></a></img>
+<td align="center" class="logo"><a href='/'><img src='media/no3z.jpg' description="no3z.com aggregator for finely fiend links." border="0"></a></img>
 
 </td>
 <td></td>
@@ -44,6 +44,18 @@
 </div>
 
 
+<div id="optioner">
+<table width="860" border ="0" align="center">
+<tr>
+<td colspan="4"></td>
+
+<td  border="0" align="center" ><a description="RAndomize on the main page."  href='/'>MAIN</a></td>
+<td  border="0" align="center" ><a description="Throw those youtube feeds." href='/video'>VIDEO</a></td>
+<td  border="0" align="center" ><a description="GEt those links on fire." href='/links'>LINKS</a></td>
+<td  border="0" align="center" ><a description="About this and other pages." href='/about'>ABOUT</a></td>
+</tr>
+</table>
+</div>
 
 <table width="930" border ="0" align="center">
 <tr> <td colspan="2"> </td>
@@ -58,8 +70,20 @@
       <li>
 		<a id="images{{ forloop.counter }}"
 		 href={{ update.url }} 
-		 name=/thumbnail/{{ update.key }} 
-		 description="{{ update.comment }}" 
+		 {% if update.osize %}
+		 	name=/image/{{ update.key }} 
+		 {% else %}
+		 	name=/thumbnail/{{ update.key }} 
+		 {% endif %}
+
+		description="&lt;a href=&quot;{{ update.url }}&quot;&gt;&lt;img vspace=&quot;4&quot; hspace=&quot;4&quot; 
+		 			border=&quot;0&quot; align=&quot;RIGHT&quot; src=&quot;/thumbnail/{{ update.key }}&quot;/&gt;&lt;/a&gt;
+		 			&lt;p&gt;&lt;a href=&quot;{{ update.url }}&quot; title=&quot;{{ update.author }} 
+					permalink&quot;&gt;&lt;img width=&quot;11&quot; height=&quot;12&quot; src=&quot;
+					/thumbnail/{{ update.key }}&quot; /&gt;&lt;/a&gt;{{ update.title }} / &lt;a href=&quot;{{ update.url }}
+					&quot;&gt;&lt;/a&gt;:&lt;br br /&gt;&lt;b&gt;&lt;a 
+					href=&quot;{{ update.url }}/&quot;&gt;{{ update.caption }}"
+		 
 		 type="{{ update.tags }}" 
 		 title="{{ update.title }}">
 		  {{ update.title }} </a><br>
@@ -103,8 +127,8 @@
   },
   show: false,
   tip: 'topMiddle',
-  name: 'green',
-  fontSize: '12px',
+  name: 'cream',
+  fontSize: '11px',
   color: 'black',
   fontFamily: 'Arial, Helvetica, sans-serif'
   }
@@ -124,8 +148,8 @@
   },
   show: false,
   tip: 'topLeft',
-  name: 'green',
-  fontSize: '12px',
+  name: 'cream',
+  fontSize: '11px',
   color: 'black',
   fontFamily: 'Arial, Helvetica, sans-serif'
   }
