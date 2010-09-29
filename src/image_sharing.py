@@ -424,8 +424,8 @@ class ImageSharingSearch(ImageSharingBaseHandler):
       
     pics = []
     pics = Picture.all()
-    pics.filter("portfolio !=", "LINKS")
     pics = Picture.all().filter('rand > ', random.random()).order('rand')
+    #pics.filter("portfolio !=", "LINKS")
     self.render_to_response('index.html', {
         'updates': pics[:26],
       })
@@ -435,8 +435,9 @@ class ImagevideoSearch(ImageSharingBaseHandler):
     
     pics = []
     pics = Picture.all()
+    #pics = Picture.all().filter('rand > ', random.random()).order('rand')
     pics.filter("portfolio =", "VIDEO")
-    pics = Picture.all().filter('rand > ', random.random()).order('rand')
+    pics.order("-submitted_date")
     self.render_to_response('index.html', {
         'updates': pics[:26],
       })
