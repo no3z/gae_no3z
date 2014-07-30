@@ -172,6 +172,16 @@ class ReturnLinksAlbumImages(RequestBaseHandler):
     
 #------------------------------------------------------------------------------
 
+class ReturnNewsAlbumImages(RequestBaseHandler):
+  def get(self):   
+    pics = []
+    pics = Picture.all()
+    pics.filter("portfolio =", "NEWS")
+    self.render_to_response('html/index.html', {
+        'updates': pics[:26],
+      })
+#------------------------------------------------------------------------------
+
 class ReturnAboutAlbumImages(RequestBaseHandler):
   def get(self):   
     pics = []
@@ -180,7 +190,18 @@ class ReturnAboutAlbumImages(RequestBaseHandler):
     self.render_to_response('html/index.html', {
         'updates': pics[:26],
       })
+
+#------------------------------------------------------------------------------
+
+class RemoveAllImageFromAlbum(RequestBaseHandler):
+  def get(self, album):   
+    pics = []
+    pics = Picture.all()
+    pics.filter("portfolio =", album)
     
+    for pic in  pics:
+      pic.delete()      
+          
 #------------------------------------------------------------------------------
 
 class ShowImage(RequestBaseHandler):
@@ -452,10 +473,12 @@ def main():
              ('/show_image/([-\w]+)', ShowImage),
              ('/update/([-\w]+)', ShowImage),
 	     ('/delete_image/([-\w]+)', DeleteImage),
+	     ('/remove_all_album_images/([-\w]+)', RemoveAllImageFromAlbum),
              ('/(thumbnail|image)/([-\w]+)', ServeImage),
              ('/about', ReturnAboutAlbumImages),
              ('/links', ReturnLinksAlbumImages),
              ('/video', ReturnVideoAlbumImages),
+	     ('/news', ReturnNewsAlbumImages),
              ('/', ReturnRandomizedImages)]
   
   application = webapp.WSGIApplication(url_map,debug=True)
