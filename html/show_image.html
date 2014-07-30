@@ -3,8 +3,7 @@
 {% block content %}
 <form action='/update/{{pic.key}}' method='post' enctype='multipart/form-data'> 
 <h1> <font color="white"><div class='pictitle'> {{pic.title}} </div><br></font> </h1>
-<a>
-<div class='picsubmitter'> {{pic.submitter}} </div>
+<a><div class='picsubmitter'> {{pic.submitter}} </div>
 <div class='pictags'>Tags: {% for tag in pic.tags %} <a href='/search?q={{tag}}'>{{tag}}</a>{% if not forloop.last %},{% endif %} {% endfor %} </div>
 <div class='picview'><img src='/image/{{image_key}}'> </div>
 <div class='piccaption'>{{pic.author}} </div>
@@ -16,6 +15,5 @@
 <div class='formrow'>Comment:<input type='text' name='comment'  size=90 value="{{pic.comment}}"></div>
 <div class='formrow'><input type="checkbox" name="osize" value="True">OriginalSize</div>  
 <br><div class='formrow'><input type='submit' value='Update Image'></div><br>
-<div class='formrow'> <a href='/album/{{pic.album.key}}'>Back to albums</a> </div>
-</a>
+<div class='formrow'> <a href='/album/{{pic.album.key}}'>Back to albums</a> </div></a>
 {% endblock %}
