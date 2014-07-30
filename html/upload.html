@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Uploading new photo{% endblock %}
+{% block content %}
+<form action='/upload/{{album_key}}' method='post'
+  enctype='multipart/form-data'>
+  <div class='formrow'><a>
+ Title:
+    <input type='text' name='title'>
+
+      </div>
+  <div class='formrow'>
+    URL:
+    <textarea name='url'  cols='60'></textarea>
+  </div>
+  </div>
+  <div class='formrow'>
+    Caption:
+    <textarea name='caption' rows='4' cols='60'></textarea>
+  </div>
+  <div class='formrow'>
+    Tags (comma separated):
+    <input type='text' name='tags'>
+  </div>
+  <div class='formrow'>
+    File: 	
+    <input type='file' name='picfile'>
+  </div>
+
+  <div class='formrow'>
+    Author: 	
+    <input type='author' name='author'>
+  </div>
+
+  
+ <div class='formrow'>
+<INPUT TYPE=CHECKBOX name='osize'>Show As Original_size
+  </div>
+
+<br><br>
+  <input type='submit' value='Send'>
+  </a>
+</form>
+{% endblock %}

@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+  <head>
+  
+<title>no3z</title>
+</head>
+
+
+    <title>
+      {% block headtitle %}Image Sharing{% endblock %}
+    </title>
+    <link href='/media/style2.css' rel='stylesheet' type='text/css'>
+  </head>
+  <body>
+  <div id="logotipo">
+<table width="860" border ="0" align="center">
+<tr> 
+<td colspan="3"></td>
+<td align="center" class="logo"><a href='/'><img src='media/no3z.jpg' description="no3z.com agrega noticias de distintos feeds RSS 2.0 y los presenta finamente." border="0"></a></img>
+
+</td>
+<td></td>
+</tr>
+
+</table>
+</div>
+
+
+    <div class='header' align="center" >{%block header %}
+    <a>no3z.com Sharing - {% block title %}{% endblock %}
+    {% endblock %}</div>
+    <div class='headerbar' align="center" >
+    {% render_user_link current_uri %}
+    </div>
+    </a>
+    
+    <div class='content'>
+    {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

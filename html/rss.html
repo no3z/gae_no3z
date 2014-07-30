@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}Uploading new photo{% endblock %}
+{% block content %}
+<form action='/rss/{{album_key}}' method='post'>
+  <div><a>RSS2 Feed URL: <input name='feed_name' cols='60' type='text'></div>
+  <div><input type='submit' value='Import Feed!'></a></div>
+</form>
+{% endblock %}
