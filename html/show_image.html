@@ -1,78 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Viewing {{pic.title}}{% endblock %}
 {% block content %}
-<form action='/update/{{pic.key}}' method='post'
-  enctype='multipart/form-data'>
+<form action='/update/{{pic.key}}' method='post' enctype='multipart/form-data'> 
+<h1> <font color="white"><div class='pictitle'> {{pic.title}} </div><br></font> </h1>
 <a>
-<div class='pictitle'>
-  {{pic.title}}
-</div><br>
-<div class='picsubmitter'>
-  {{pic.submitter}}
-</div>
-<div class='picview'>
-  <img src='/image/{{image_key}}'>
-</div>
-<div class='piccaption'>
-  {{pic.author}}
-</div>
-<div class='pictags'>
-  Tags:
-  {% for tag in pic.tags %}
-  <a href='/search?q={{tag}}'>{{tag}}</a>{% if not forloop.last %},{% endif %}
-  {% endfor %}
-</div>
-
-  <div class='formrow'><a>
- Title:
-    <input type='text' name='title' value={{pic.title}} >
-      </div>
-      
-  <div class='formrow'>
-    URL:
-    <input type='text' name='url' value={{pic.url}} 4>
-  </div>
-  
-    <div class='author'><a>
- Title:
-    <input type='text' name='author' value={{pic.author}}>
-      </div>
-      
-  </div>
-  <div class='formrow'>
-    Caption:
-    <textarea name='caption'  rows='13' cols='60'>{{pic.caption}}</textarea> 
-  </div>
-
- 
-  <div class='formrow'>
-    PORTFOLIO(Album name):
-    <input type='text' value={{pic.portfolio}} name='portfolio'> 
-  </div>
-  
- <div class='formrow'>
-<INPUT TYPE=CHECKBOX name='osize'>Show As Original_size
-  </div>
-  
-  <br>
-  
-    <div class='formrow'>
-<INPUT TYPE=CHECKBOX name='delete'>Delete 
-  </div>
-  <br>
-  
-<div class='formrow'>
-  <input type='submit' value='UPDATE'>
-  </div>
-<br>
-<br>
-</form>
-
-<div class='formrow'>
-<a href='/album/{{pic.album.key}}'>Back to album</a>
-  </div>
-
-
+<div class='picsubmitter'> {{pic.submitter}} </div>
+<div class='pictags'>Tags: {% for tag in pic.tags %} <a href='/search?q={{tag}}'>{{tag}}</a>{% if not forloop.last %},{% endif %} {% endfor %} </div>
+<div class='picview'><img src='/image/{{image_key}}'> </div>
+<div class='piccaption'>{{pic.author}} </div>
+<div class='formrow'>Title:<input type='text' name='title' size=80 value="{{pic.title}}"></div>      
+<div class='author'>Author: <input type='text' name='author' size=80 value="{{pic.author}}"></div>
+<div class='formrow'>Album:<input type='text' value="{{pic.portfolio}}" size=80 name='portfolio'></div>
+<div class='formrow'>URL:<input type='text' name='url' size=90 value="{{pic.url}}"></div>
+<div class='formrow'>Caption:<input type='text' name='caption'  size=90 value="{{pic.caption}}"></div>
+<div class='formrow'>Comment:<input type='text' name='comment'  size=90 value="{{pic.comment}}"></div>
+<div class='formrow'><input type="checkbox" name="osize" value="True">OriginalSize</div>  
+<br><div class='formrow'><input type='submit' value='Update Image'></div><br>
+<div class='formrow'> <a href='/album/{{pic.album.key}}'>Back to albums</a> </div>
 </a>
-
 {% endblock %}

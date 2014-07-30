@@ -1,8 +1,12 @@
 #!/usr/bin/python2.5
-__author__ = 'no3z'
+from __future__ import with_statement
+from google.appengine.api import files
 
-import cgi
+from google.appengine.dist import use_library
+use_library('django', '0.96')
+
 import os
+import cgi 
 
 from google.appengine.api import images
 from google.appengine.api import users
@@ -10,9 +14,13 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from google.appengine.api import urlfetch
+from django.utils import simplejson as json
 
 import wsgiref.handlers
 import random
+import urlparse
+
+__author__ = 'no3z'
 
 template.register_template_library('templatetags.basetags')
 
@@ -190,41 +198,123 @@ class ShowImage(RequestBaseHandler):
       self.response.out.write('Couldn\'t find specified pic')
     
     title = cgi.escape(self.request.get('title'))
-    caption = cgi.escape(self.request.get('caption'))
+    caption = self.request.get('caption')
     url = cgi.escape(self.request.get('url'))
-    comment = cgi.escape(self.request.get('caption'))
+    comment = self.request.get('comment')
     author = cgi.escape(self.request.get('author'))
     osize =   cgi.escape(self.request.get('osize'))    
     portfolio =   cgi.escape(self.request.get('portfolio')) 
     tags = cgi.escape(self.request.get('tags'))
-    isdelete = cgi.escape(self.request.get('delete'))
-    
-    if isdelete:
-        pic.delete()
-        self.redirect('/list')
-        return
-    
+
     pic.title = title
     pic.caption = caption
     pic.comment = caption
     pic.author = author
     pic.url = url
     pic.portfolio = portfolio
+    
     pic.osize = False
     if osize:
-        pic.osize = True
+      pic.osize = True         
         
     pic.put()
-    
+
     self.redirect('/show_image/%s' % pic_key)
       
 
 #------------------------------------------------------------------------------
 
-class ImportRSSFeed(RequestBaseHandler):
+class DeleteImage(RequestBaseHandler):
+  def get(self, pic_key):
+    pic = db.get(pic_key)  
+    album = pic.album
+
+    self.response.out.write(pic_key)
+    self.response.out.write(album.key)
+    
+    if pic is None:
+      self.error(400)
+      self.response.out.write('Couldn\'t find specified pic')
+        
+    pic.delete()
+    self.redirect('/album/%s' % album.key())
+      
+#------------------------------------------------------------------------------
+
+class ImportRedditJSONFeed(RequestBaseHandler):
   def get(self, album_key):
     album = db.get(album_key)
-    self.render_to_response('rss.html', {
+    self.render_to_response('html/importredditjson.html', {
+        'album_key': album.key(),
+        'album_name': album.name
+      })
+        
+  def post(self, album_key):    
+
+    feed_name = cgi.escape(self.request.get('feed_name')) 
+    album = db.get(album_key)
+
+    if album is None:
+      self.error(400)
+      self.response.out.write('Couldn\'t find specified album')
+	  
+    page_json = urlfetch.Fetch('http://www.reddit.com/r/'+feed_name+'.json' ) 	    
+        
+    obj = json.loads(  page_json.content )       
+    
+    for subs in  obj.get('data').get('children'):
+      if not subs['data']['url']:
+	continue
+      
+      path = urlparse.urlparse(subs['data']['url']).path
+      ext = os.path.splitext(path)[1]
+      title = subs['data']['title']
+      url = subs['data']['url']
+
+      try:
+	image = urlfetch.Fetch(subs['data']['url']).content
+	img = images.Image(image)
+	img.im_feeling_lucky()
+			 
+	  
+	if img.width > 1920 or img.height > 1080:
+	  img.resize(img.width/2,img.height/2)
+	  
+	png_data = img                
+	png_data = img.execute_transforms(images.PNG)
+	img.resize(160,90)
+	thumbnail_data = img.execute_transforms(images.PNG)
+	temp = subs['data']['title']
+	temp = temp.replace("\"", "\'")
+	
+	Picture(submitter=users.get_current_user(),
+		title=temp,
+		comment=temp,
+		album=album,
+		url=subs['data']['url'],
+		data=png_data,
+		caption=temp,
+		author= subs['data']['author'],
+		rand = random.random(),
+		osize = False,
+		portfolio = album.name,
+		thumbnail_data=thumbnail_data).put()	     
+		
+	print "<p>", title.encode('utf-8'), url.encode('utf-8'), len(r), ext.encode('utf-8'), "inserted! </p>"
+	 	  
+      except:
+	    self.error(400)
+	    self.response.out.write("ERROR")
+    
+    self.redirect('/album/%s' % album.key())  	      
+      
+
+#------------------------------------------------------------------------------
+
+class ImportYouTubeJSONFeed(RequestBaseHandler):
+  def get(self, album_key):
+    album = db.get(album_key)
+    self.render_to_response('html/importyoutubejson.html', {
         'album_key': album.key(),
         'album_name': album.name
       })
@@ -236,53 +326,54 @@ class ImportRSSFeed(RequestBaseHandler):
     if album is None:
       self.error(400)
       self.response.out.write('Couldn\'t find specified album')
-      
-    #feed = GenericFeed(feed_name,feed_name)
+	  
+    page_json = urlfetch.Fetch('https://gdata.youtube.com/feeds/api/videos?q='+feed_name+'&v=2&alt=jsonc')        
+	  
+    obj = json.loads(  page_json.content )
+                  
+    for subs in  obj.get('data').get('items'):	  
+ 
+      try:
+	result = urlfetch.fetch(subs['thumbnail']['hqDefault'])
+
+	if result.status_code == 200:
+	  image = result.content	  
+	  img = images.Image(image)
+	  img.im_feeling_lucky()
+			    
+	  if img.width > 1920 or img.height > 1080:
+	    img.resize(img.width/2,img.height/2)
+	
+	  png_data = img                
+	  png_data = img.execute_transforms(images.PNG)
+	  img.resize(160,90)
+	  thumbnail_data = img.execute_transforms(images.PNG)	      	  
+	    
+	  Picture(submitter=users.get_current_user(),
+		  title=subs['title'],
+		  comment=subs['category'],
+		  album=album,
+		  url=subs['content']['5'],
+		  data=png_data,
+		  caption=subs['description'],
+		  author= subs['uploader'],
+		  rand = random.random(),
+		  osize = False,
+		  portfolio = album.name,
+		  thumbnail_data=thumbnail_data).put()	     	    
+	    
+      except: 
+	    self.error(400)	    
     
-    updates = []
-    updates.extend(feed.entries())
-    
-    for feed in updates:                
-        img_data = db.Blob(urlfetch.Fetch(feed.img).content)
-        if img_data == None:
-            continue
-        
-        pic = db.Query(Picture)
-        pic = Picture.all().filter('title=', feed.title)
-        num = pic.count()
-    
-        if num == 0:
-            try:
-                img = images.Image(img_data)
-                img.im_feeling_lucky()
-                png_data = img.execute_transforms(images.PNG)
-                img.resize(120,90)
-                thumbnail_data = img.execute_transforms(images.PNG)
-                Picture(submitter=users.get_current_user(),
-                      title=feed.title,
-                      comment=feed.summary,
-                      album=album,
-                      url=feed.link,
-                      data=png_data,
-                      caption=feed.summary[0:140],
-                      author=feed.author,
-                      rand = random.random(),
-                      osize = False,
-                      portfolio = album.name,
-                      thumbnail_data=thumbnail_data).put()
-                      
-            except images.LargeImageError:
-                self.error(400)
-                self.response.out.write('Sorry, the image provided was too large for us to process.')
-              
-    self.redirect('/album/%s' % album.key())
-        
+    self.redirect('/album/%s' % album.key())  	   
+          
+                
 #------------------------------------------------------------------------------
 
 class UploadImageToAlbum(RequestBaseHandler):
   def get(self, album_key):
     album = db.get(album_key)
-    self.render_to_response('upload.html', {
+    self.render_to_response('html/upload.html', {
         'album_key': album.key(),
         'album_name': album.name
       })
@@ -356,9 +447,11 @@ def main():
              ('/new', CreateAlbum),
              ('/album/([-\w]+)', ViewAlbum),
              ('/upload/([-\w]+)', UploadImageToAlbum),
-             ('/rss/([-\w]+)', ImportRSSFeed),
+             ('/importredditjson/([-\w]+)', ImportRedditJSONFeed),
+             ('/importyoutubejson/([-\w]+)', ImportYouTubeJSONFeed),
              ('/show_image/([-\w]+)', ShowImage),
              ('/update/([-\w]+)', ShowImage),
+	     ('/delete_image/([-\w]+)', DeleteImage),
              ('/(thumbnail|image)/([-\w]+)', ServeImage),
              ('/about', ReturnAboutAlbumImages),
              ('/links', ReturnLinksAlbumImages),

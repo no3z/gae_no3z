@@ -7,13 +7,12 @@ handlers:
 - url: /media
   static_dir: media
 
- 
 - url: /(rss|album|list|new|upload.*)
-  script: image_sharing.py
+  script: no3zMain.py
   login: required
   
 - url: /.*
-  script: image_sharing.py
+  script: no3zMain.py
 
 - url: /stylesheets
   static_dir: stylesheets

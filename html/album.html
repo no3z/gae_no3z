@@ -1,22 +1,27 @@
 {% extends "base.html" %}
-{% block title %}Browsing pictures in {{album_name}}{% endblock %}
+{% block title %}Browsing pictures in album: {{album_name}}{% endblock %}
 {% block content %}
-Album contains {{num_results}} pictures.
-<table>
-{% for row in pics %}
-<tr>
-{% for image in row %}
-<td>
-  <a href='/show_image/{{image.key}}'>
-      <img src='/thumbnail/{{image.key}}'>
-  </a>
-  <div class='imgsubmitter'>{{image.submitter}}</div>
-</td>
-{% endfor %}
-</tr>
-{% endfor %}
-</table>
-<a href='/list'>Browse albums</a><br>
-<a href='/upload/{{album_key}}'>Upload new image</a><br>
-<a href='/rss/{{album_key}}'>Upload rss feed</a>
+
+<h1> <font color="white"> Album contains {{num_results}} pictures.</font> </h1>
+<table> {% for row in pics %} 
+  <tr> {% for image in row %}
+    <td> <a href='/show_image/{{image.key}}'> <img src='/thumbnail/{{image.key}}'> </a><br>
+    <button type="button" onclick="location.href='/show_image/{{image.key}}'">Edit</button>
+    <button type="submit" onclick="location.href='/delete_image/{{image.key}}'">Delete</button>
+    <div class='imgsubmitter'>{{image.submitter}}</div> </td>
+  {% endfor %} </tr>
+{% endfor %} </table>
+
+<form action='/importredditjson/{{album_key}}' method='post'> <div><a>Subbreddit to import: <input name='feed_name' cols='60' type='text'> <input type='submit' value='Import Reddit JSON'></a></div></form>
+<form action='/importyoutubejson/{{album_key}}' method='post'><div><a>YouTube to import: <input name='feed_name' cols='60' type='text'> <input type='submit' value='Import YouTube JSON'></a></div></form>
+<br><h1> <font color="white"> 
+<p><form action='/upload/{{album_key}}' method='post' enctype='multipart/form-data'>
+<div class='formrow'>Title:<input type='text' size=80  name='title'> </div>
+<div class='formrow'>URL:<input type='text' name='url' size=80 ></textarea></div>
+<div class='formrow'>Caption:<input type='text' name='caption' size=90></textarea></div>
+<div class='formrow'>comment:<input type='text size=80  name='comment'></div>
+<div class='formrow'>File:<input type='file' size=80 name='picfile'></div>
+<div class='formrow'>Author:<input type='author' size=80 name='author'></div>
+<div class='formrow'><input type=checkbox name='osize' value="True">OriginalSize</div>
+<input type='submit' value='Upload'></form><br><a href='/list'>Back to Albums</a></font> </h1>
 {% endblock content %}
